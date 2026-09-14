@@ -1,5 +1,39 @@
 import random
 
+#Sets rules for Card values and suits, including left bower handling
+class CardRules:
+    SUITS = ["H", "D", "C", "S"]
+    SameColor = {"H": "D", "D": "H", "C": "S", "S": "C"}
+
+    # Card Constructor
+    def __init__(self, trump_suit, led_suit = None):
+        self.trump_suit = trump_suit
+        self.left_bower_suit = self.SameColor[trump_suit]
+        self.led_suit = led_suit 
+
+    # Returns the suit the card counts as (handles left bower)
+    def effective_suit(self, card):
+        suit, rank = card
+        if suit == self.left_bower_suit and rank == 11:
+            return self.trump_suit
+        return suit
+
+    def card_value(self, card):
+        suit, rank = card
+        eff_suit = self.effective_suit(card)
+
+        if eff_suit == self.trump_suit:
+            if rank == 11 and suit == self.trump_suit:
+                return 100  # Right Bower allways wins
+            elif rank == 11 and suit == self.left_bower_suit:
+                return 99  # Left Bower only loses to right bower
+            else:
+                return rank + 50  # Regular trump cards: rank (9-14) + 50, always outranks non-trump cards
+        elif suit == self.led_suit:
+            return rank  # Non-trump cards of the led suit are ranked normally
+        else:   
+            return -1  # Non-trump cards of a different suit are ranked lowest and can't win the trick
+
 def main():
     print("Let's play Euchre!")
     dealer = 1
@@ -13,8 +47,16 @@ def main():
 
     kittyCard = deck.pop()  # The top card of the remaining deck is the kitty card
     print("Kitty Card: " + str(kittyCard))
-    chooseTrumpKitty(kittyCard, dealer, player1_hand, player2_hand, player3_hand, player4_hand)
-    chooseTrumpNontKitty(kittyCard, dealer, player1_hand, player2_hand, player3_hand, player4_hand)
+
+    decisionMaker, suit = chooseTrumpKitty(kittyCard, dealer, player1_hand, player2_hand, player3_hand, player4_hand)
+
+    if decisionMaker is None:
+        maker, trump_suit = chooseTrumpNontKitty(kittyCard, dealer, player1_hand, player2_hand, player3_hand, player4_hand)
+
+    if decisionMaker is None:
+        print("Everyone passed both rounds! Redeal needed.")
+    else:
+        print(f"Player {maker} called the trump suit {trump_suit}.")
 
 def resetDeck():
     #Create and shuffle a euchre deck of 24 cards
