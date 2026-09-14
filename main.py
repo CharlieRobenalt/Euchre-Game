@@ -13,7 +13,7 @@ def main():
 def resetDeck():
     suits = ["H", "D", "C", "S"]
     ranks = [9, 10, 11, 12, 13, 14]
-    deck = [(suit, rank) for suit in suits for rank in ranks]
+    deck = {(suit, rank) for suit in suits for rank in ranks}
     return deck
 
 def dealHand(deck):
