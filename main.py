@@ -13,7 +13,8 @@ def main():
 
     kittyCard = deck.pop()  # The top card of the remaining deck is the kitty card
     print("Kitty Card: " + str(kittyCard))
-    chooseTrump(kittyCard, dealer, player1_hand, player2_hand, player3_hand, player4_hand)
+    chooseTrumpKitty(kittyCard, dealer, player1_hand, player2_hand, player3_hand, player4_hand)
+    chooseTrumpNontKitty(kittyCard, dealer, player1_hand, player2_hand, player3_hand, player4_hand)
 
 def resetDeck():
     #Create and shuffle a euchre deck of 24 cards
@@ -31,7 +32,7 @@ def dealHand(deck):
         hand.add(card)
     return hand
 
-def chooseTrump(kittyCard, dealer, player1_hand, player2_hand, player3_hand, player4_hand):
+def chooseTrumpKitty(kittyCard, dealer, player1_hand, player2_hand, player3_hand, player4_hand):
     print ("kitty card is: " + str(kittyCard))
 
     hands = {
@@ -69,4 +70,54 @@ def chooseTrump(kittyCard, dealer, player1_hand, player2_hand, player3_hand, pla
 
     print("Everyone passed! No trump chosen this round.")
     return None, None  
+
+def chooseTrumpNontKitty(kittyCard, dealer, player1_hand, player2_hand, player3_hand, player4_hand):
+    hands = {
+        1: player1_hand,
+        2: player2_hand,
+        3: player3_hand,
+        4: player4_hand,
+    }    
+    # Figure out who starts (player after the dealer, wrapping 4 -> 1)
+    start = 1 if dealer == 4 else dealer + 1
+
+    # Build turn order starting from that player, wrapping around
+    turn_order = []
+    current = start
+    for _ in range(4):
+        turn_order.append(current)
+        current = 1 if current == 4 else current + 1
+        
+    for player_num in turn_order:
+        name = f"Player {player_num}" + (" (dealer)" if player_num == dealer else "")
+        hand = hands[player_num]
+        print(f"{name}'s turn. Your hand is {hand}")
+
+        if player_num == dealer:
+            print(f"{name} is the dealer and must choose a trump suit.")
+            while True:
+                trump_suit = input(f"{name}, please choose a trump suit (H/D/C/S): ").upper()
+                if trump_suit in ["H", "D", "C", "S"] and trump_suit != kittyCard[0]:
+                    print(f"{name} chooses {trump_suit} as the trump suit.")
+                    return player_num, trump_suit
+                print("Invalid choice. Please choose a valid suit that is not the kitty card's suit.")
+        else:    
+            while True:
+                choice = input(f"{name}, do you want to choose a trump suit or pass? (choose/pass): ").lower()
+                if choice in ["choose", "pass"]:
+                    break
+                print("Invalid choice, please type 'choose' or 'pass'.")
+
+            if choice == "choose":
+                while True:
+                    trump_suit = input(f"{name}, please choose a trump suit (H/D/C/S): ").upper()
+                    if trump_suit in ["H", "D", "C", "S"] and trump_suit != kittyCard[0]:
+                        print(f"{name} chooses {trump_suit} as the trump suit.")
+                        return player_num, trump_suit
+                    print("Invalid choice. Please choose a valid suit that is not the kitty card's suit.")
+
+            else:
+                print(f"{name} passed.")
+                
+    return None, None
 main()
