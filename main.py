@@ -1,3 +1,5 @@
+import random
+
 def main():
     print("Let's play Euchre!")
     deck = resetDeck()
@@ -14,6 +16,7 @@ def resetDeck():
     suits = ["H", "D", "C", "S"]
     ranks = [9, 10, 11, 12, 13, 14]
     deck = {(suit, rank) for suit in suits for rank in ranks}
+    random.shuffle(deck)
     return deck
 
 def dealHand(deck):
