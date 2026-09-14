@@ -48,15 +48,12 @@ def main():
     kittyCard = deck.pop()  # The top card of the remaining deck is the kitty card
     print("Kitty Card: " + str(kittyCard))
 
-    decisionMaker, suit = chooseTrumpKitty(kittyCard, dealer, player1_hand, player2_hand, player3_hand, player4_hand)
+    decisionMaker, trump_suit = chooseTrumpKitty(kittyCard, dealer, player1_hand, player2_hand, player3_hand, player4_hand)
 
     if decisionMaker is None:
-        maker, trump_suit = chooseTrumpNontKitty(kittyCard, dealer, player1_hand, player2_hand, player3_hand, player4_hand)
+        decisionMaker, trump_suit = chooseTrumpNontKitty(kittyCard, dealer, player1_hand, player2_hand, player3_hand, player4_hand)
 
-    if decisionMaker is None:
-        print("Everyone passed both rounds! Redeal needed.")
-    else:
-        print(f"Player {maker} called the trump suit {trump_suit}.")
+    print(f"Player {decisionMaker} called the trump suit {trump_suit}.")
 
 def resetDeck():
     #Create and shuffle a euchre deck of 24 cards
