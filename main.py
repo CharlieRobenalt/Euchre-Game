@@ -2,6 +2,9 @@ import random
 
 def main():
     print("Let's play Euchre!")
+    dealer = 1
+    score = [0, 0]  # Team 1 and Team 2 scores
+
     deck = resetDeck()
     player1_hand = dealHand(deck)
     player2_hand = dealHand(deck)
