@@ -39,8 +39,8 @@ def main():
     dealer = 1
     score = [0, 0]  # Team 1 and Team 2 scores
 
-    deck = resetDeck()
-    player1_hand = dealHand(deck)
+    deck = resetDeck() #Create and shuffle the deck
+    player1_hand = dealHand(deck) #deal each player their 5 cards
     player2_hand = dealHand(deck)
     player3_hand = dealHand(deck)
     player4_hand = dealHand(deck)
@@ -67,16 +67,18 @@ def resetDeck():
     #Create and shuffle a euchre deck of 24 cards
     suits = ["H", "D", "C", "S"]
     ranks = [9, 10, 11, 12, 13, 14]
+    #for each suit in suits and each rank in ranks, create a (suit, rank) pair
+    #and add the pair to the deck
     deck = [(suit, rank) for suit in suits for rank in ranks]
-    random.shuffle(deck)
+    random.shuffle(deck) #randomly shuffle the deck
     return deck
 
 def dealHand(deck):
     #deal the player 5 cards
-    hand = set()
+    hand = set() #hand is an empty set
     for _ in range(5):
-        card = deck.pop()
-        hand.add(card)
+        card = deck.pop() #randomly pop a card from the deck
+        hand.add(card) #and add that card to the hand
     return hand
 
 def chooseTrumpKitty(kittyCard, dealer, player1_hand, player2_hand, player3_hand, player4_hand):
