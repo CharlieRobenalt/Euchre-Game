@@ -1,9 +1,10 @@
 def main():
     print("Let's play Euchre!")
-    desk = resetDeck()
+    deck = resetDeck()
+    print(deck)
 
 def resetDeck():
-    suits = ["Hearts", "Diamonds", "Clubs", "Spades"]
+    suits = ["H", "D", "C", "S"]
     ranks = [9, 10, 11, 12, 13, 14]
     deck = [(suit, rank) for suit in suits for rank in ranks]
     return deck
@@ -11,3 +12,5 @@ def resetDeck():
 def dealCards(deck):
     #deal each player 5 cards reserve the final 4 cards for the kitty
     pass
+
+main()
