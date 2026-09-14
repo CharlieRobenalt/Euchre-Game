@@ -1,5 +1,6 @@
 def main():
     print("Let's play Euchre!")
+    desk = resetDeck()
 
 def resetDeck():
     suits = ["Hearts", "Diamonds", "Clubs", "Spades"]
