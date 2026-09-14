@@ -6,7 +6,10 @@ def main():
     player1_hand = dealHand(deck)
     player2_hand = dealHand(deck)
     player3_hand = dealHand(deck)
-    user_hand = dealHand(deck)
+    player4_hand = dealHand(deck)
+
+    kittyCard = deck.pop()
+    print("The kitty card is: ", kittyCard)
 
 def resetDeck():
     #Create and shuffle a euchre deck of 24 cards
