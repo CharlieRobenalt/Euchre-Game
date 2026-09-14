@@ -8,8 +8,8 @@ def main():
     player3_hand = dealHand(deck)
     player4_hand = dealHand(deck)
 
-    kittyCard = deck.pop()
-    print("The kitty card is: ", kittyCard)
+    kittyCard = deck.pop()  # The top card of the remaining deck is the kitty card
+    print("Kitty Card: " + str(kittyCard))
 
 def resetDeck():
     #Create and shuffle a euchre deck of 24 cards
