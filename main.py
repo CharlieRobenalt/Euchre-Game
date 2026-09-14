@@ -159,4 +159,20 @@ def chooseTrumpNontKitty(kittyCard, dealer, player1_hand, player2_hand, player3_
                 print(f"{name} passed.")
                 
     return None, None
+
+def playHand(player1_hand, player2_hand, player3_hand, player4_hand, trump_suit, decisionMaker):
+    # Implement the logic for playing a hand of Euchre
+    print("Playing a hand of Euchre...")
+    HandScore = [0, 0]  # Team 1 and Team 2 scores for this hand
+    # Implement the logic for playing tricks and determining the winner of each trick
+    playTrick(player1_hand, player2_hand, player3_hand, player4_hand, trump_suit, decisionMaker, HandScore)
+    # Update scores based on the outcome of the hand
+
+def playTrick(player1_hand, player2_hand, player3_hand, player4_hand, trump_suit, decisionMaker, HandScore):
+    # Implement the logic for playing trick
+    
+    # Determine the winner of each trick and update HandScore accordingly
+    trickWinner = None
+    return trickWinner 
+
 main()
