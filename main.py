@@ -115,7 +115,7 @@ def chooseTrumpKitty(kittyCard, dealer, player1_hand, player2_hand, player3_hand
             print(f"{name} says pick it up! Player {dealer} picks up the card, making {kittyCard[0]} the trump suit.")
             return player_num, kittyCard[0]
         else:
-            print(f"{name} passed.")
+            print(f"{name} passed.")re
 
     print("Everyone passed! No trump chosen this round.")
     return None, None  
