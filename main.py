@@ -55,6 +55,14 @@ def main():
 
     print(f"Player {decisionMaker} called the trump suit {trump_suit}.")
 
+    hand_score = playHand(player1_hand, player2_hand, player3_hand, player4_hand, trump_suit, dealer)
+    if hand_score[0] > hand_score[1]:
+        score[0] += 1
+        print("Team 1 wins the hand!")
+    else:
+        score[1] += 1
+        print("Team 2 wins the hand!")
+
 def resetDeck():
     #Create and shuffle a euchre deck of 24 cards
     suits = ["H", "D", "C", "S"]
@@ -160,19 +168,95 @@ def chooseTrumpNontKitty(kittyCard, dealer, player1_hand, player2_hand, player3_
                 
     return None, None
 
-def playHand(player1_hand, player2_hand, player3_hand, player4_hand, trump_suit, decisionMaker):
-    # Implement the logic for playing a hand of Euchre
-    print("Playing a hand of Euchre...")
-    HandScore = [0, 0]  # Team 1 and Team 2 scores for this hand
-    # Implement the logic for playing tricks and determining the winner of each trick
-    playTrick(player1_hand, player2_hand, player3_hand, player4_hand, trump_suit, decisionMaker, HandScore)
-    # Update scores based on the outcome of the hand
+def playHand(player1_hand, player2_hand, player3_hand, player4_hand, trump_suit, dealer):
+    hands = {1: player1_hand, 2: player2_hand, 3: player3_hand, 4: player4_hand}
+    handScore = [0, 0]
 
-def playTrick(player1_hand, player2_hand, player3_hand, player4_hand, trump_suit, decisionMaker, HandScore):
-    # Implement the logic for playing trick
+    # First trick is led by the player left of the dealer
+    leader = 1 if dealer == 4 else dealer + 1
+
+    for _ in range(5):   # 5 tricks per hand
+        leader = playTrick(hands, trump_suit, leader)
+        # after each trick, the winner leads the next one
+        if leader in [1, 3]:
+            handScore[0] += 1
+        else:
+            handScore[1] += 1
+
+    return handScore  # Return the score for the hand
     
-    # Determine the winner of each trick and update HandScore accordingly
-    trickWinner = None
-    return trickWinner 
+
+def playTrick(hands, trump_suit, leader):
+    # Implement the logic for playing trick
+    rules = CardRules(trump_suit)
+    cards_played = []
+    led_suit = None
+
+     # Build turn order starting from that player, wrapping around
+    turn_order = []
+    current = leader
+    for _ in range(4):
+        turn_order.append(current)
+        current = 1 if current == 4 else current + 1
+
+    for player_num in turn_order:
+        name = f"Player {player_num}"
+        hand = hands[player_num]
+        chosen_card = choose_card(name, hand, led_suit, rules)
+        hands[player_num].remove(chosen_card)
+        cards_played.append((player_num, chosen_card))
+
+        if led_suit is None:
+            led_suit = rules.effective_suit(chosen_card)  # Set the led suit based on the first card played
+            rules.led_suit = led_suit  # Update the rules with the led suit
+
+        print(f"{name} played {chosen_card}.")
+
+    winner_player = determine_trick_winner(cards_played, rules)
+    return winner_player  # Return the player number of the trick winner
+
+def get_legal_cards(hand, led_suit, rules):
+    #Returns the cards in hand that are legal to play, given the led suit.
+    if led_suit is None:
+        return list(hand)  # first card of the trick — anything is legal
+    else:
+        legal_cards = [card for card in hand if rules.effective_suit(card) == led_suit]
+        return legal_cards if legal_cards else list(hand)  # If no cards of the led suit, can play any card
+
+def choose_card(name, hand, led_suit, rules):
+    legal_cards = get_legal_cards(hand, led_suit, rules)
+    print(f"{name}, your hand is {hand}. Legal cards to play: {legal_cards}")
+    
+    while True:
+        card_input = input(f"{name}, choose a card to play (format: SuitRank, e.g., H11 for Jack of Hearts): ")
+        if len(card_input) < 2:
+            print("Invalid input. Please enter a valid card.")
+            continue
+        
+        suit = card_input[0].upper()
+        try:
+            rank = int(card_input[1:])
+        except ValueError:
+            print("Invalid rank. Please enter a valid card.")
+            continue
+        
+        chosen_card = (suit, rank)
+        
+        if chosen_card in legal_cards:
+            return chosen_card
+        else:
+            print("You cannot play that card. Please choose a legal card.")
+
+def determine_trick_winner(cards_played, rules):
+    winning_card = None
+    winning_player = None
+
+    for player_num, card in cards_played:
+        if winning_card is None or rules.card_value(card) > rules.card_value(winning_card):
+            winning_card = card
+            winning_player = player_num
+
+    print(f"Player {winning_player} wins the trick with {winning_card}.")
+    return winning_player
 
 main()
