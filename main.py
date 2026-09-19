@@ -254,19 +254,20 @@ class Hand:
         print(f"Player {winning_player} wins the trick with {winning_card}.")
         return winning_player
 
-    def adjustScore(self, hand_score):
+    def adjustScore(self, trickswon):
+        handscore = [0, 0]
         # Adjusts the score based on the hand score and the player who called trump
         if self.decisionMaker in [1, 3]:  # Team 1 called trump
-            if hand_score[0] == 3 or hand_score[0] == 4:  # Team 1 made their bid
+            if trickswon[0] == 3 or trickswon[0] == 4:  # Team 1 made their bid
                 return [1,0]  # Team 1 gets 1 point
-            elif hand_score[0] == 5:  # Team 1 won all 5 tricks
+            elif trickswon[0] == 5:  # Team 1 won all 5 tricks
                 return [2,0]  # Team 1 gets 3 points
             else:  # Team 1 failed to make their bid
                 return [0, 2]  # Team 2 gets 2 points
         else:  # Team 2 called trump
-            if hand_score[1] == 3 or hand_score[1] == 4:  # Team 2 made their bid
+            if trickswon[1] == 3 or trickswon[1] == 4:  # Team 2 made their bid
                 return [0, 1]  # Team 2 gets 1 point
-            elif hand_score[1] == 5:  # Team 2 won all 5 tricks
+            elif trickswon[1] == 5:  # Team 2 won all 5 tricks
                 return [0, 2]  # Team 2 gets 3 points
             else:  # Team 2 failed to make their bid
                 return [2, 0]  # Team 1 gets 2 points
