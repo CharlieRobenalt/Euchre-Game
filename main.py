@@ -3,12 +3,12 @@ import random
 class Game: 
     def __init__(self):
         self.dealer = 1
-        self.score = [0, 0]  # Team 1 and Team 2 scores
+        self.score = [0, 0] # Team 1 and Team 2 scores
     def playGame(self):
         print("Let's play Euchre!")
         while max(self.score) < 10:
             hand = Hand(self.dealer)
-            points = hand.play()          # returns e.g. (0, 1) or (2, 0) etc.
+            points = hand.play() # returns e.g. (0, 1) or (2, 0) etc.
             self.score[0] += points[0]
             self.score[1] += points[1]
             print(f"Score: Team 1: {self.score[0]}, Team 2: {self.score[1]}")
@@ -17,7 +17,152 @@ class Game:
 
         winner = 1 if self.score[0] >= 10 else 2
         print(f"Team {winner} wins the game!")
-    
+
+class Hand:
+    def __init__(self, dealer):
+        self.dealer = dealer
+        self.deck = self.resetDeck()
+        self.hands = {player: self.dealHand() for player in range(1, 5)}
+        self.kittyCard = self.deck.pop()
+        self.trump_suit = None
+        self.decisionMaker = None
+
+    def playHand(self):
+        self.decisionMaker, self.trump_suit = self.chooseTrumpKitty()
+        if self.decisionMaker is None:
+            self.decisionMaker, self.trump_suit = self.chooseTrumpNonKitty()
+        else:
+            self.discardCard()
+
+        print(f"Player {self.decisionMaker} called the trump suit {self.trump_suit}.")
+        hand_score = self.playTricks()
+        return hand_score
+
+    def resetDeck(self):
+        #Create and shuffle a euchre deck of 24 cards
+        suits = ["H", "D", "C", "S"]
+        ranks = [9, 10, 11, 12, 13, 14]
+        #for each suit in suits and each rank in ranks, create a (suit, rank) pair
+        #and add the pair to the deck
+        deck = [(suit, rank) for suit in suits for rank in ranks]
+        random.shuffle(deck) #randomly shuffle the deck
+        return deck
+
+    def dealHand(self):
+        #deal the player 5 cards
+        hand = set() #hand is an empty set
+        for _ in range(5):
+            card = self.deck.pop() #randomly pop a card from the deck
+            hand.add(card) #and add that card to the hand
+        return hand
+
+    def chooseTrumpKitty(self):
+        print("Kitty Card: " + str(self.kittyCard))
+
+        # Figure out who starts (player after the dealer, wrapping 4 -> 1)
+        start = 1 if self.dealer == 4 else self.dealer + 1
+
+        # Build turn order starting from that player, wrapping around
+        turn_order = []
+        current = start
+        for _ in range(4):
+            turn_order.append(current)
+            current = 1 if current == 4 else current + 1
+            
+        for player_num in turn_order:
+            #Print the player's turn (indicating dealer if applicable) and their hand
+            name = f"Player {player_num}" + (" (dealer)" if player_num == self.dealer else "")
+            hand = self.hands[player_num]
+            print(f"{name}'s turn. Your hand is {hand}")
+
+            while True:
+                choice = input(f"{name}, do you want to pick it up or pass? (pick/pass): ").lower()
+                if choice in ["pick", "pass"]:
+                    break
+                print("Invalid choice, please type 'pick' or 'pass'.")
+
+            if choice == "pick":
+                print(f"{name} says pick it up! Player {self.dealer} picks up the card, making {self.kittyCard[0]} the trump suit.")
+                return player_num, self.kittyCard[0]
+            else:
+                print(f"{name} passed.")
+
+        print("Everyone passed! No trump chosen this round.")
+        return None, None  
+
+    def chooseTrumpNonKitty(self):
+        # Figure out who starts (player after the dealer, wrapping 4 -> 1)
+        start = 1 if self.dealer == 4 else self.dealer + 1
+
+        # Build turn order starting from that player, wrapping around
+        turn_order = []
+        current = start
+        for _ in range(4):
+            turn_order.append(current)
+            current = 1 if current == 4 else current + 1
+
+        #Ask each player if they want to choose a trump suit, and if so, which one (not the suit of the kitty card)
+        for player_num in turn_order:
+            name = f"Player {player_num}" + (" (dealer)" if player_num == self.dealer else "")
+            hand = self.hands[player_num]
+            print(f"{name}'s turn. Your hand is {hand}")
+
+            if player_num == self.dealer:
+                print(f"{name} is the dealer and must choose a trump suit.")
+                while True:
+                    trump_suit = input(f"{name}, please choose a trump suit (H/D/C/S): ").upper()
+                    if trump_suit in ["H", "D", "C", "S"] and trump_suit != self.kittyCard[0]:
+                        print(f"{name} chooses {trump_suit} as the trump suit.")
+                        return player_num, trump_suit
+                    print("Invalid choice. Please choose a valid suit that is not the kitty card's suit.")
+            else:    
+                while True:
+                    choice = input(f"{name}, do you want to choose a trump suit or pass? (choose/pass): ").lower()
+                    if choice in ["choose", "pass"]:
+                        break
+                    print("Invalid choice, please type 'choose' or 'pass'.")
+
+                if choice == "choose":
+                    while True:
+                        trump_suit = input(f"{name}, please choose a trump suit (H/D/C/S): ").upper()
+                        if trump_suit in ["H", "D", "C", "S"] and trump_suit != self.kittyCard[0]:
+                            print(f"{name} chooses {trump_suit} as the trump suit.")
+                            return player_num, trump_suit
+                        print("Invalid choice. Please choose a valid suit that is not the kitty card's suit.")
+
+                else:
+                    print(f"{name} passed.")
+                    
+        return None, None
+
+    def discardCard(self):
+
+        dealer_hand = self.hands[self.dealer]
+        dealer_hand.add(self.kittyCard)  # Dealer picks up the kitty card
+        print(f"Dealer's hand after picking up the kitty card: {dealer_hand}")
+
+        while True:
+            discard_input = input(f"Dealer, choose a card to discard (format: SuitRank, e.g., H11 for Jack of Hearts): ")
+            if len(discard_input) < 2:
+                print("Invalid input. Please enter a valid card.")
+                continue
+            
+            suit = discard_input[0].upper()
+            try:
+                rank = int(discard_input[1:])
+            except ValueError:
+                print("Invalid rank. Please enter a valid card.")
+                continue
+            
+            discard_card = (suit, rank)
+            
+            if discard_card in dealer_hand:
+                dealer_hand.remove(discard_card)
+                print(f"Dealer discarded {discard_card}. Dealer's new hand: {dealer_hand}")
+                break
+            else:
+                print("You cannot discard that card. Please choose a card from your hand.")
+
 
 #Sets rules for Card values and suits, including left bower handling
 class CardRules:
