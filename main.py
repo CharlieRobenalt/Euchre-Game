@@ -40,18 +40,20 @@ class Hand:
 
         print(f"Player {self.decisionMaker} called the trump suit {self.trump_suit}.")
 
-        handScore = [0, 0]
+        tricksWon = [0, 0]
         
         for _ in range(5):   # 5 tricks per hand
             self.leader = self.playTrick()
             # after each trick, keep track of the winner so they can lead the next trick
             # adjust the hand score accordingly
             if self.leader in [1, 3]:
-                handScore[0] += 1
+                tricksWon[0] += 1
             else:
-                handScore[1] += 1
+                tricksWon[1] += 1
+
+        handscore = self.adjustScore(tricksWon)
         
-        return handScore  # Return the score for the hand
+        return handscore  # Return the score for the hand
 
     def resetDeck(self):
         #Create and shuffle a euchre deck of 24 cards
@@ -251,6 +253,23 @@ class Hand:
 
         print(f"Player {winning_player} wins the trick with {winning_card}.")
         return winning_player
+
+    def adjustScore(self, hand_score):
+        # Adjusts the score based on the hand score and the player who called trump
+        if self.decisionMaker in [1, 3]:  # Team 1 called trump
+            if hand_score[0] == 3 or hand_score[0] == 4:  # Team 1 made their bid
+                return [1,0]  # Team 1 gets 1 point
+            elif hand_score[0] == 5:  # Team 1 won all 5 tricks
+                return [2,0]  # Team 1 gets 3 points
+            else:  # Team 1 failed to make their bid
+                return [0, 2]  # Team 2 gets 2 points
+        else:  # Team 2 called trump
+            if hand_score[1] == 3 or hand_score[1] == 4:  # Team 2 made their bid
+                return [0, 1]  # Team 2 gets 1 point
+            elif hand_score[1] == 5:  # Team 2 won all 5 tricks
+                return [0, 2]  # Team 2 gets 3 points
+            else:  # Team 2 failed to make their bid
+                return [2, 0]  # Team 1 gets 2 points
 
 
 #Sets rules for Card values and suits, including left bower handling
