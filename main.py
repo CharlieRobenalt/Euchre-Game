@@ -9,7 +9,7 @@ class Game:
         print("Let's play Euchre!")
         while max(self.score) < 10:
             hand = Hand(self.dealer)
-            points = hand.play() # returns e.g. (0, 1) or (2, 0) etc.
+            points = hand.playHand() # returns e.g. (0, 1) or (2, 0) etc.
             self.score[0] += points[0]
             self.score[1] += points[1]
             print(f"Score: Team 1: {self.score[0]}, Team 2: {self.score[1]}")
@@ -42,7 +42,7 @@ class Hand:
         handScore = [0, 0]
         
         for _ in range(5):   # 5 tricks per hand
-            self.leader = self.playTrick(self.hands, self.trump_suit, self.leader)
+            self.leader = self.playTrick()
             # after each trick, keep track of the winner so they can lead the next trick
             # adjust the hand score accordingly
             if self.leader in [1, 3]:
@@ -178,12 +178,11 @@ class Hand:
                 print("You cannot discard that card. Please choose a card from your hand.")
 
     def playTrick(self):
-        # Implement the logic for playing trick
         rules = CardRules(self.trump_suit)
         cards_played = []
         led_suit = None
 
-        # Build turn order starting from that player, wrapping around
+        # Build turn order starting from the leader, wrapping around
         turn_order = []
         current = self.leader
         for _ in range(4):
@@ -194,45 +193,44 @@ class Hand:
             name = f"Player {player_num}"
             hand = self.hands[player_num]
             chosen_card = self.choose_card(name, hand, led_suit, rules)
-            self.hands[player_num].remove(chosen_card)
+            hand.remove(chosen_card)
             cards_played.append((player_num, chosen_card))
 
             if led_suit is None:
-                led_suit = rules.effective_suit(chosen_card)  # Set the led suit based on the first card played
-                rules.led_suit = led_suit  # Update the rules with the led suit
+                led_suit = rules.effective_suit(chosen_card)
+                rules.led_suit = led_suit
 
             print(f"{name} played {chosen_card}.")
 
         winner_player = self.determine_trick_winner(cards_played, rules)
-        return winner_player  # Return the player number of the trick winner
+        return winner_player
 
-    def get_legal_cards(self):
-        #Returns the cards in hand that are legal to play, given the led suit.
-        if self.led_suit is None:
-            return list(self.hand)  # first card of the trick — anything is legal
+    def get_legal_cards(self, hand, led_suit, rules):
+        if led_suit is None:
+            return list(hand)  # first card of the trick — anything is legal
         else:
-            legal_cards = [card for card in self.hand if self.rules.effective_suit(card) == self.led_suit]
-            return legal_cards if legal_cards else list(self.hand)  # If no cards of the led suit, can play any card
+            legal_cards = [card for card in hand if rules.effective_suit(card) == led_suit]
+            return legal_cards if legal_cards else list(hand)
 
-    def choose_card(self):
-        legal_cards = self.get_legal_cards()
-        print(f"{name}, your hand is {self.hand}. Legal cards to play: {legal_cards}")
-        
+    def choose_card(self, name, hand, led_suit, rules):
+        legal_cards = self.get_legal_cards(hand, led_suit, rules)
+        print(f"{name}, your hand is {hand}. Legal cards to play: {legal_cards}")
+
         while True:
             card_input = input(f"{name}, choose a card to play (format: SuitRank, e.g., H11 for Jack of Hearts): ")
             if len(card_input) < 2:
                 print("Invalid input. Please enter a valid card.")
                 continue
-            
+
             suit = card_input[0].upper()
             try:
                 rank = int(card_input[1:])
             except ValueError:
                 print("Invalid rank. Please enter a valid card.")
                 continue
-            
+
             chosen_card = (suit, rank)
-            
+
             if chosen_card in legal_cards:
                 return chosen_card
             else:
@@ -284,6 +282,10 @@ class CardRules:
             return rank  # Non-trump cards of the led suit are ranked normally
         else:   
             return -1  # Non-trump cards of a non-led suit are ranked lowest and can't win the trick
+
+
+game1 = Game()
+game1.playGame()
 
 """
 def main():
