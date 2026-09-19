@@ -238,12 +238,12 @@ class Hand:
             else:
                 print("You cannot play that card. Please choose a legal card.")
 
-    def determine_trick_winner(self):
+    def determine_trick_winner(self, cards_played, rules):
         winning_card = None
         winning_player = None
 
         for player_num, card in cards_played:
-            if winning_card is None or self.rules.card_value(card) > self.rules.card_value(winning_card):
+            if winning_card is None or rules.card_value(card) > rules.card_value(winning_card):
                 winning_card = card
                 winning_player = player_num
 
@@ -285,6 +285,7 @@ class CardRules:
         else:   
             return -1  # Non-trump cards of a non-led suit are ranked lowest and can't win the trick
 
+"""
 def main():
     print("Let's play Euchre! THIS IS THE MAIN METHOD")
     dealer = 1
@@ -543,3 +544,4 @@ def determine_trick_winner(cards_played, rules):
     return winning_player
 
 main()
+"""
