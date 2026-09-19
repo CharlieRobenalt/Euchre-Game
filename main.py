@@ -24,7 +24,7 @@ class CardRules:
 
         if eff_suit == self.trump_suit:
             if rank == 11 and suit == self.trump_suit:
-                return 100  # Right Bower allways wins
+                return 100  # Right Bower always wins
             elif rank == 11 and suit == self.left_bower_suit:
                 return 99  # Left Bower only loses to right bower
             else:
@@ -32,7 +32,7 @@ class CardRules:
         elif suit == self.led_suit:
             return rank  # Non-trump cards of the led suit are ranked normally
         else:   
-            return -1  # Non-trump cards of a different suit are ranked lowest and can't win the trick
+            return -1  # Non-trump cards of a non-led suit are ranked lowest and can't win the trick
 
 def main():
     print("Let's play Euchre!")
@@ -45,17 +45,25 @@ def main():
     player3_hand = dealHand(deck)
     player4_hand = dealHand(deck)
 
-    kittyCard = deck.pop()  # The top card of the remaining deck is the kitty card
+    # Put the hands in a dictionary for easy access
+    hands = {
+            1: player1_hand,
+            2: player2_hand,
+            3: player3_hand,
+            4: player4_hand,
+        }    
+
+    kittyCard = deck.pop()  #The top card of the remaining deck is the kitty card
     print("Kitty Card: " + str(kittyCard))
 
-    decisionMaker, trump_suit = chooseTrumpKitty(kittyCard, dealer, player1_hand, player2_hand, player3_hand, player4_hand)
+    decisionMaker, trump_suit = chooseTrumpKitty(kittyCard, dealer, hands)
 
     if decisionMaker is None:
-        decisionMaker, trump_suit = chooseTrumpNontKitty(kittyCard, dealer, player1_hand, player2_hand, player3_hand, player4_hand)
+        decisionMaker, trump_suit = chooseTrumpNontKitty(kittyCard, dealer, hands)
 
     print(f"Player {decisionMaker} called the trump suit {trump_suit}.")
 
-    hand_score = playHand(player1_hand, player2_hand, player3_hand, player4_hand, trump_suit, dealer)
+    hand_score = playHand(hands, trump_suit, dealer)
     if hand_score[0] > hand_score[1]:
         score[0] += 1
         print("Team 1 wins the hand!")
@@ -81,15 +89,9 @@ def dealHand(deck):
         hand.add(card) #and add that card to the hand
     return hand
 
-def chooseTrumpKitty(kittyCard, dealer, player1_hand, player2_hand, player3_hand, player4_hand):
+def chooseTrumpKitty(kittyCard, dealer, hands):
     print ("kitty card is: " + str(kittyCard))
 
-    hands = {
-        1: player1_hand,
-        2: player2_hand,
-        3: player3_hand,
-        4: player4_hand,
-    }    
     # Figure out who starts (player after the dealer, wrapping 4 -> 1)
     start = 1 if dealer == 4 else dealer + 1
 
@@ -120,13 +122,7 @@ def chooseTrumpKitty(kittyCard, dealer, player1_hand, player2_hand, player3_hand
     print("Everyone passed! No trump chosen this round.")
     return None, None  
 
-def chooseTrumpNontKitty(kittyCard, dealer, player1_hand, player2_hand, player3_hand, player4_hand):
-    hands = {
-        1: player1_hand,
-        2: player2_hand,
-        3: player3_hand,
-        4: player4_hand,
-    }    
+def chooseTrumpNontKitty(kittyCard, dealer, hands):
     # Figure out who starts (player after the dealer, wrapping 4 -> 1)
     start = 1 if dealer == 4 else dealer + 1
 
@@ -170,8 +166,7 @@ def chooseTrumpNontKitty(kittyCard, dealer, player1_hand, player2_hand, player3_
                 
     return None, None
 
-def playHand(player1_hand, player2_hand, player3_hand, player4_hand, trump_suit, dealer):
-    hands = {1: player1_hand, 2: player2_hand, 3: player3_hand, 4: player4_hand}
+def playHand(hands, trump_suit, dealer):
     handScore = [0, 0]
 
     # First trick is led by the player left of the dealer
