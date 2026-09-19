@@ -54,16 +54,20 @@ def main():
         }    
 
     kittyCard = deck.pop()  #The top card of the remaining deck is the kitty card
-    print("Kitty Card: " + str(kittyCard))
 
+    #Determine the trump suit, store the player who called it and the trump suit in variables
     decisionMaker, trump_suit = chooseTrumpKitty(kittyCard, dealer, hands)
 
+    #If nobody said pick it up, then go to the second round of choosing trump suit
     if decisionMaker is None:
-        decisionMaker, trump_suit = chooseTrumpNontKitty(kittyCard, dealer, hands)
+        decisionMaker, trump_suit = chooseTrumpNonKitty(kittyCard, dealer, hands)
 
     print(f"Player {decisionMaker} called the trump suit {trump_suit}.")
 
+    #Play a hand and update the score based on the result
     hand_score = playHand(hands, trump_suit, dealer)
+
+    #TEMPORARY: DELETE THIS WHEN THE SCORE METHOD IS COMPLETE
     if hand_score[0] > hand_score[1]:
         score[0] += 1
         print("Team 1 wins the hand!")
@@ -90,7 +94,7 @@ def dealHand(deck):
     return hand
 
 def chooseTrumpKitty(kittyCard, dealer, hands):
-    print ("kitty card is: " + str(kittyCard))
+    print("Kitty Card: " + str(kittyCard))
 
     # Figure out who starts (player after the dealer, wrapping 4 -> 1)
     start = 1 if dealer == 4 else dealer + 1
@@ -103,6 +107,7 @@ def chooseTrumpKitty(kittyCard, dealer, hands):
         current = 1 if current == 4 else current + 1
         
     for player_num in turn_order:
+        #Print the player's turn (indicating dealer if applicable) and their hand
         name = f"Player {player_num}" + (" (dealer)" if player_num == dealer else "")
         hand = hands[player_num]
         print(f"{name}'s turn. Your hand is {hand}")
@@ -117,12 +122,12 @@ def chooseTrumpKitty(kittyCard, dealer, hands):
             print(f"{name} says pick it up! Player {dealer} picks up the card, making {kittyCard[0]} the trump suit.")
             return player_num, kittyCard[0]
         else:
-            print(f"{name} passed.")re
+            print(f"{name} passed.")
 
     print("Everyone passed! No trump chosen this round.")
     return None, None  
 
-def chooseTrumpNontKitty(kittyCard, dealer, hands):
+def chooseTrumpNonKitty(kittyCard, dealer, hands):
     # Figure out who starts (player after the dealer, wrapping 4 -> 1)
     start = 1 if dealer == 4 else dealer + 1
 
