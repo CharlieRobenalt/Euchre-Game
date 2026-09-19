@@ -61,6 +61,8 @@ def main():
     #If nobody said pick it up, then go to the second round of choosing trump suit
     if decisionMaker is None:
         decisionMaker, trump_suit = chooseTrumpNonKitty(kittyCard, dealer, hands)
+    else:
+        discardCard(dealer, hands, kittyCard)  # Dealer discards a card after picking up the kitty card
 
     print(f"Player {decisionMaker} called the trump suit {trump_suit}.")
 
@@ -137,7 +139,8 @@ def chooseTrumpNonKitty(kittyCard, dealer, hands):
     for _ in range(4):
         turn_order.append(current)
         current = 1 if current == 4 else current + 1
-        
+
+    #Ask each player if they want to choose a trump suit, and if so, which one (not the suit of the kitty card)
     for player_num in turn_order:
         name = f"Player {player_num}" + (" (dealer)" if player_num == dealer else "")
         hand = hands[player_num]
@@ -170,6 +173,33 @@ def chooseTrumpNonKitty(kittyCard, dealer, hands):
                 print(f"{name} passed.")
                 
     return None, None
+
+def discardCard(dealer, hands, kittyCard):
+    dealer_hand = hands[dealer]
+    dealer_hand.add(kittyCard)  # Dealer picks up the kitty card
+    print(f"Dealer's hand after picking up the kitty card: {dealer_hand}")
+
+    while True:
+        discard_input = input(f"Dealer, choose a card to discard (format: SuitRank, e.g., H11 for Jack of Hearts): ")
+        if len(discard_input) < 2:
+            print("Invalid input. Please enter a valid card.")
+            continue
+        
+        suit = discard_input[0].upper()
+        try:
+            rank = int(discard_input[1:])
+        except ValueError:
+            print("Invalid rank. Please enter a valid card.")
+            continue
+        
+        discard_card = (suit, rank)
+        
+        if discard_card in dealer_hand:
+            dealer_hand.remove(discard_card)
+            print(f"Dealer discarded {discard_card}. Dealer's new hand: {dealer_hand}")
+            break
+        else:
+            print("You cannot discard that card. Please choose a card from your hand.")
 
 def playHand(hands, trump_suit, dealer):
     handScore = [0, 0]
