@@ -10,23 +10,61 @@ def card_to_id(card):
     suit, rank = card
     return SUIT_MAP[suit] * 6 + (rank - 9)
 
-def log_move(hand, trump_suit, lead_card, chosen_card, filename="my_moves.csv"):
-    """Encodes the current turn and writes it as a row in CSV."""
-    # Create a 24-length binary vector representing cards in hand (1 if held, 0 if not)
+# Currently Tracks player's hand, cards played this trick, partner's play, partner's winning status,
+# trump suit, lead card, and chosen card.
+
+def log_move(player_num, hand, trump_suit, cards_played_this_trick, rules, chosen_card, filename="my_moves.csv"):
+    """Encodes the current turn and writes it as a row in CSV.
+    
+    cards_played_this_trick: list of (player_num, card) tuples, in play order, for this trick so far.
+    rules: the CardRules instance for this trick (needed to check who's currently winning).
+    """
+    # 1. Hand — 24-length binary vector
     hand_vector = [0] * 24
     for card in hand:
         hand_vector[card_to_id(card)] = 1
 
+    # 2. Partner's seat number (1&3 are partners, 2&4 are partners)
+    partner_num = player_num + 2 if player_num <= 2 else player_num - 2
+
+    # 3. Encode each already-played card by seat position relative to the current player
+    #    (1st, 2nd, 3rd played this trick — up to 3 possible before your turn)
+    #    Each slot is -1 if that player hasn't gone yet, otherwise the card's id
+    relative_slots = [-1, -1, -1]
+    for i, (p_num, card) in enumerate(cards_played_this_trick):
+        relative_slots[i] = card_to_id(card)
+
+    # 4. Is your partner currently winning the trick, and what did they play?
+    partner_card = next((card for p_num, card in cards_played_this_trick if p_num == partner_num), None)
+    partner_played_flag = 1 if partner_card is not None else 0
+    partner_card_id = card_to_id(partner_card) if partner_card is not None else -1
+
+    partner_winning_flag = 0
+    if partner_card is not None and cards_played_this_trick:
+        best_so_far = max(cards_played_this_trick, key=lambda pc: rules.card_value(pc[1]))
+        if best_so_far[0] == partner_num:
+            partner_winning_flag = 1
+
     trump_val = SUIT_MAP[trump_suit]
-    lead_val = card_to_id(lead_card) if lead_card else -1
+    lead_val = relative_slots[0]  # first card played this trick, if any
     label = card_to_id(chosen_card)
 
-    row = hand_vector + [trump_val, lead_val, label]
+    row = (
+        hand_vector
+        + relative_slots
+        + [partner_played_flag, partner_card_id, partner_winning_flag]
+        + [trump_val, lead_val, label]
+    )
 
     write_header = not os.path.exists(filename)
     with open(filename, mode="a", newline="") as f:
         writer = csv.writer(f)
         if write_header:
-            headers = [f"card_{i}" for i in range(24)] + ["trump", "lead_card", "chosen_card"]
+            headers = (
+                [f"hand_card_{i}" for i in range(24)]
+                + ["played_1st", "played_2nd", "played_3rd"]
+                + ["partner_played", "partner_card", "partner_winning"]
+                + ["trump", "lead_card", "chosen_card"]
+            )
             writer.writerow(headers)
         writer.writerow(row)

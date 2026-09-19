@@ -1,5 +1,6 @@
 import random
 from unicodedata import name
+from logger import log_move
 
 class Game: 
     def __init__(self):
@@ -194,6 +195,9 @@ class Hand:
             hand = self.hands[player_num]
             chosen_card = self.choose_card(name, hand, led_suit, rules)
             hand.remove(chosen_card)
+
+            log_move(player_num, hand, self.trump_suit, cards_played, rules, chosen_card)
+
             cards_played.append((player_num, chosen_card))
 
             if led_suit is None:
