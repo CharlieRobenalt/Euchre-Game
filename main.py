@@ -7,7 +7,7 @@ class Game:
         self.dealer = 1
         self.score = [0, 0] # Team 1 and Team 2 scores
     def playGame(self):
-        print("Let's play Euchre!\n")
+        print("\nLet's play Euchre!\n")
         while max(self.score) < 10:
             hand = Hand(self.dealer)
             points = hand.playHand() # returns e.g. (0, 1) or (2, 0) etc.
@@ -38,7 +38,7 @@ class Hand:
         else:
             self.discardCard()
 
-        print(f"Player {self.decisionMaker} called the trump suit {self.trump_suit}.")
+        print(f"Player {self.decisionMaker} called the trump suit {self.trump_suit}.\n")
 
         tricksWon = [0, 0]
         
@@ -74,7 +74,7 @@ class Hand:
         return hand
 
     def chooseTrumpKitty(self):
-        print("\nKitty Card: " + str(self.kittyCard))
+        print("Kitty Card: " + str(self.kittyCard) + "\n")
 
         # Figure out who starts (player after the dealer, wrapping 4 -> 1)
         start = 1 if self.dealer == 4 else self.dealer + 1
@@ -99,12 +99,12 @@ class Hand:
                 print("Invalid choice, please type 'pick' or 'pass'.")
 
             if choice == "pick":
-                print(f"{name} says pick it up! Player {self.dealer} picks up the card, making {self.kittyCard[0]} the trump suit.")
+                print(f"{name} says pick it up! Player {self.dealer} picks up the card, making {self.kittyCard[0]} the trump suit.\n")
                 return player_num, self.kittyCard[0]
             else:
-                print(f"{name} passed.")
+                print(f"{name} passed.\n")
 
-        print("Everyone passed! No trump chosen this round.")
+        print("Everyone passed! No trump chosen this round.\n")
         return None, None  
 
     def chooseTrumpNonKitty(self):
@@ -143,12 +143,12 @@ class Hand:
                     while True:
                         trump_suit = input(f"{name}, please choose a trump suit (H/D/C/S): ").upper()
                         if trump_suit in ["H", "D", "C", "S"] and trump_suit != self.kittyCard[0]:
-                            print(f"{name} chooses {trump_suit} as the trump suit.")
+                            print(f"{name} chooses {trump_suit} as the trump suit.\n")
                             return player_num, trump_suit
                         print("Invalid choice. Please choose a valid suit that is not the kitty card's suit.")
 
                 else:
-                    print(f"{name} passed.")
+                    print(f"{name} passed.\n")
                     
         return None, None
 
@@ -175,7 +175,7 @@ class Hand:
             
             if discard_card in dealer_hand:
                 dealer_hand.remove(discard_card)
-                print(f"Dealer discarded {discard_card}. Dealer's new hand: {dealer_hand}")
+                print(f"Dealer discarded {discard_card}. Dealer's new hand: {dealer_hand}\n")
                 break
             else:
                 print("You cannot discard that card. Please choose a card from your hand.")
@@ -206,7 +206,7 @@ class Hand:
                 led_suit = rules.effective_suit(chosen_card)
                 rules.led_suit = led_suit
 
-            print(f"{name} played {chosen_card}.")
+            print(f"{name} played {chosen_card}.\n")
 
         winner_player = self.determine_trick_winner(cards_played, rules)
         return winner_player
@@ -251,7 +251,7 @@ class Hand:
                 winning_card = card
                 winning_player = player_num
 
-        print(f"Player {winning_player} wins the trick with {winning_card}.")
+        print(f"Player {winning_player} wins the trick with {winning_card}.\n")
         return winning_player
 
     def adjustScore(self, trickswon):
