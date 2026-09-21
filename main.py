@@ -7,18 +7,18 @@ class Game:
         self.dealer = 1
         self.score = [0, 0] # Team 1 and Team 2 scores
     def playGame(self):
-        print("Let's play Euchre!")
+        print("Let's play Euchre!\n")
         while max(self.score) < 10:
             hand = Hand(self.dealer)
             points = hand.playHand() # returns e.g. (0, 1) or (2, 0) etc.
             self.score[0] += points[0]
             self.score[1] += points[1]
-            print(f"Score: Team 1: {self.score[0]}, Team 2: {self.score[1]}")
+            print(f"\nScore: Team 1: {self.score[0]}, Team 2: {self.score[1]}")
 
             self.dealer = 1 if self.dealer == 4 else self.dealer + 1  # rotate dealer
 
         winner = 1 if self.score[0] >= 10 else 2
-        print(f"Team {winner} wins the game!")
+        print(f"\nTeam {winner} wins the game!")
 
 class Hand:
     def __init__(self, dealer):
@@ -74,7 +74,7 @@ class Hand:
         return hand
 
     def chooseTrumpKitty(self):
-        print("Kitty Card: " + str(self.kittyCard))
+        print("\nKitty Card: " + str(self.kittyCard))
 
         # Figure out who starts (player after the dealer, wrapping 4 -> 1)
         start = 1 if self.dealer == 4 else self.dealer + 1
