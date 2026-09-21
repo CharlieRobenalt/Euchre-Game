@@ -16,7 +16,7 @@ def train_clone():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # 4. Train the classifier
-    model = RandomForestClassifier(n_estimators=100, random_state=68)
+    model = RandomForestClassifier(n_estimators=100, random_state=42)
     model.fit(X_train, y_train)
 
     # 5. Check accuracy on data it hasn't seen
