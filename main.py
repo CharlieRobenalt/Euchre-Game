@@ -133,7 +133,7 @@ class Hand:
                     trump_suit = input(f"{name}, please choose a trump suit (H/D/C/S): ").upper()
                     if trump_suit in ["H", "D", "C", "S"] and trump_suit != self.kittyCard[0]:
                         print(f"{name} chooses {trump_suit} as the trump suit.")
-                        log_bidding_decision(player_num, hand, -1, self.dealer, 2, self.kittyCard[0], trump_suit)
+                        log_bidding_decision(player_num, hand, -1, self.dealer, 2, self.kittyCard, trump_suit)
                         return player_num, trump_suit
                     print("Invalid choice. Please choose a valid suit that is not the kitty card's suit.")
             else:    
@@ -146,15 +146,15 @@ class Hand:
                 if choice == "choose":
                     while True:
                         trump_suit = input(f"{name}, please choose a trump suit (H/D/C/S): ").upper()
-                        if trump_suit in ["H", "D", "C", "S"] and trump_suit != self.kittyCard[0]:
+                        if trump_suit in ["H", "D", "C", "S"] and trump_suit != self.kittyCard:
                             print(f"{name} chooses {trump_suit} as the trump suit.\n")
-                            log_bidding_decision(player_num, hand, -1, self.dealer, 2, self.kittyCard[0], trump_suit)
+                            log_bidding_decision(player_num, hand, -1, self.dealer, 2, self.kittyCard, trump_suit)
                             return player_num, trump_suit
                         print("Invalid choice. Please choose a valid suit that is not the kitty card's suit.")
 
                 else:
                     print(f"{name} passed.\n")
-                    log_bidding_decision(player_num, hand, -1, self.dealer, 2, self.kittyCard[0], 5)
+                    log_bidding_decision(player_num, hand, -1, self.dealer, 2, self.kittyCard, 5)
 
         return None, None
 
