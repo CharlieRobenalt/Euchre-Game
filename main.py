@@ -1,6 +1,7 @@
 import random
 from unicodedata import name
 from logger import log_move
+from logger import log_bidding_decision
 
 class Game: 
     def __init__(self):
@@ -100,8 +101,10 @@ class Hand:
 
             if choice == "pick":
                 print(f"{name} says pick it up! Player {self.dealer} picks up the card, making {self.kittyCard[0]} the trump suit.\n")
+                log_bidding_decision(player_num, hand, self.kittyCard, self.dealer, 1, -1, 6)
                 return player_num, self.kittyCard[0]
             else:
+                log_bidding_decision(player_num, hand, self.kittyCard, self.dealer, 1, -1, 5)
                 print(f"{name} passed.\n")
 
         print("Everyone passed! No trump chosen this round.\n")
@@ -130,6 +133,7 @@ class Hand:
                     trump_suit = input(f"{name}, please choose a trump suit (H/D/C/S): ").upper()
                     if trump_suit in ["H", "D", "C", "S"] and trump_suit != self.kittyCard[0]:
                         print(f"{name} chooses {trump_suit} as the trump suit.")
+                        log_bidding_decision(player_num, hand, -1, self.dealer, 2, self.kittyCard[0], trump_suit)
                         return player_num, trump_suit
                     print("Invalid choice. Please choose a valid suit that is not the kitty card's suit.")
             else:    
@@ -144,12 +148,14 @@ class Hand:
                         trump_suit = input(f"{name}, please choose a trump suit (H/D/C/S): ").upper()
                         if trump_suit in ["H", "D", "C", "S"] and trump_suit != self.kittyCard[0]:
                             print(f"{name} chooses {trump_suit} as the trump suit.\n")
+                            log_bidding_decision(player_num, hand, -1, self.dealer, 2, self.kittyCard[0], trump_suit)
                             return player_num, trump_suit
                         print("Invalid choice. Please choose a valid suit that is not the kitty card's suit.")
 
                 else:
                     print(f"{name} passed.\n")
-                    
+                    log_bidding_decision(player_num, hand, -1, self.dealer, 2, self.kittyCard[0], 5)
+
         return None, None
 
     def discardCard(self):
