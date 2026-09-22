@@ -6,7 +6,7 @@ from sklearn.metrics import accuracy_score
 
 def train_clone():
     # 1. Load the collected gameplay
-    df = pd.read_csv("my_moves_fixed.csv")
+    df = pd.read_csv("my_moves.csv")
     
     # 2. Separate features (game state) and label (the choice)
     X = df.drop(columns=["chosen_card"])
