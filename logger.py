@@ -95,13 +95,16 @@ def log_bidding_decision(player_num, hand, kitty_card, dealer_num, bidding_round
     is_partner_dealer = 1 if partner_num == dealer_num else 0
     relative_pos = (player_num - dealer_num) % 4
 
+    # Turned down suit value
+    turned_down_suit_val = SUIT_MAP[turned_down_suit] if turned_down_suit in ["H", "D", "C", "S"] else turned_down_suit
+
     # 4. Construct the row
     row = (
         hand_vector
         + [
             kitty_card_id,
             bidding_round,
-            turned_down_suit,
+            turned_down_suit_val,
             relative_pos,
             is_dealer,
             is_partner_dealer,
