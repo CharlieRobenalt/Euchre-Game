@@ -106,7 +106,7 @@ def log_bidding_decision(player_num, hand, kitty_card, dealer_num, bidding_round
             is_dealer,
             is_partner_dealer,
         ]
-        + [bid_decision if bidding_round == 1 else SUIT_MAP[bid_decision]]
+        + [bid_decision if bidding_round == 1 else SUIT_MAP[bid_decision] if bid_decision in ["H", "D", "C", "S"] else 5]
     )
 
     # 5. Write to CSV
