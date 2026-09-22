@@ -196,10 +196,10 @@ class Hand:
             name = f"Player {player_num}"
             hand = self.hands[player_num]
             chosen_card = self.choose_card(name, hand, led_suit, rules)
-            hand.remove(chosen_card)
 
             log_move(player_num, hand, self.trump_suit, cards_played, rules, chosen_card)
 
+            hand.remove(chosen_card)
             cards_played.append((player_num, chosen_card))
 
             if led_suit is None:
