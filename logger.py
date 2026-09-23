@@ -4,6 +4,23 @@ import os
 # Map card ranks and suits to consistent integers
 SUIT_MAP = {"H": 0, "D": 1, "C": 2, "S": 3}
 RANK_MAP = {9: 9, 10: 10, 11: 11, 12: 12, 13: 13, 14: 14}
+SAME_COLOR = {"H": "D", "D": "H", "C": "S", "S": "C"}
+TRUMP_RANK_NAMES = ["right_bower", "left_bower", "A", "K", "Q", "10", "9"]
+
+# Creates True/False vector of which trump cards have been played, in order of rank
+def get_trump_played_vector(played_cards, trump_suit):
+    left_suit = SAME_COLOR[trump_suit]
+    trump_slots = [
+        (trump_suit, 11),  # Right Bower
+        (left_suit, 11),  # Left Bower
+        (trump_suit, 14),  # Ace
+        (trump_suit, 13),  # King
+        (trump_suit, 12),  # Queen
+        (trump_suit, 10),  # 10
+        (trump_suit, 9),  # 9
+    ]
+    played_set = set(played_cards)
+    return [1 if card in played_set else 0 for card in trump_slots]
 
 def card_to_id(card):
     """Converts a card tuple like ('H', 11) into a unique integer (0 to 23)."""
@@ -13,12 +30,18 @@ def card_to_id(card):
 # Currently Tracks player's hand, cards played this trick, partner's play, partner's winning status,
 # trump suit, lead card, and chosen card.
 
-def log_move(player_num, hand, trump_suit, cards_played_this_trick, rules, chosen_card, filename="my_moves.csv"):
+def log_move(player_num, hand, trump_suit, cards_played_this_trick, played_cards_history, rules, chosen_card, filename="my_moves_with_trumps.csv"):
     """Encodes the current turn and writes it as a row in CSV.
-    
     cards_played_this_trick: list of (player_num, card) tuples, in play order, for this trick so far.
-    rules: the CardRules instance for this trick (needed to check who's currently winning).
-    """
+    trump_cards_played: list of trump cards that have been played.
+    rules: the CardRules instance for this trick (needed to check who's currently winning)."""
+
+    # Create Trump Played Vector
+    all_played_cards = list(played_cards_history) + [
+    card for _, card in cards_played_this_trick
+    ]
+    trump_played_vector = get_trump_played_vector(all_played_cards, trump_suit)
+
     # 1. Hand — 24-length binary vector
     hand_vector = [0] * 24
     for card in hand:
@@ -53,7 +76,9 @@ def log_move(player_num, hand, trump_suit, cards_played_this_trick, rules, chose
         hand_vector
         + relative_slots
         + [partner_played_flag, partner_card_id, partner_winning_flag]
-        + [trump_val, lead_val, label]
+        + [trump_val, lead_val] 
+        + trump_played_vector
+        + [label]
     )
 
     write_header = not os.path.exists(filename)
@@ -64,7 +89,9 @@ def log_move(player_num, hand, trump_suit, cards_played_this_trick, rules, chose
                 [f"hand_card_{i}" for i in range(24)]
                 + ["played_1st", "played_2nd", "played_3rd"]
                 + ["partner_played", "partner_card", "partner_winning"]
-                + ["trump", "lead_card", "chosen_card"]
+                + ["trump", "lead_card"]
+                + [f"trump_played_{name}" for name in TRUMP_RANK_NAMES]
+                + ["chosen_card"]
             )
             writer.writerow(headers)
         writer.writerow(row)
@@ -128,6 +155,50 @@ def log_bidding_decision(player_num, hand, kitty_card, dealer_num, bidding_round
                     "is_partner_dealer",
                 ]
                 + ["bid_decision"]  # Target Y
+            )
+            writer.writerow(headers)
+        writer.writerow(row)
+
+def log_discard_decision(hand, kitty_card, discard_decision, filename="discard_decisions.csv"):
+    """Encodes the discard decision and writes it as a row in CSV.
+    player_num: the player making the decision (1-4)
+    hand: list of card tuples in the player's hand
+    kitty_card: Card tuple ('H', 11) or None
+    dealer_num: the player who is the dealer (1-4)
+    discard_decision: Integer target: 0-5 (index of card to discard from hand + kitty)
+    filename="discard_decisions.csv",
+    """
+
+    # 1. Hand — 24-length binary vector
+    hand_vector = [0] * 24
+    for card in hand:
+        hand_vector[card_to_id(card)] = 1
+
+    # 2. Kitty card ID
+    kitty_card_id = card_to_id(kitty_card)
+    decision = card_to_id(discard_decision)  # The card that was discarded
+
+
+    # 3. Construct the row
+    row = (
+        hand_vector
+        + [
+            kitty_card_id,
+        ]
+        + [decision]
+    )
+
+    # 4. Write to CSV
+    write_header = not os.path.exists(filename)
+    with open(filename, mode="a", newline="") as f:
+        writer = csv.writer(f)
+        if write_header:
+            headers = (
+                [f"hand_card_{i}" for i in range(24)]
+                + [
+                    "kitty_card",
+                ]
+                + ["discard_decision"]  # Target Y
             )
             writer.writerow(headers)
         writer.writerow(row)

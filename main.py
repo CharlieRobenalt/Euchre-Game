@@ -2,6 +2,7 @@ import random
 from unicodedata import name
 from logger import log_move
 from logger import log_bidding_decision
+from logger import log_discard_decision
 
 class Game: 
     def __init__(self):
@@ -29,6 +30,9 @@ class Hand:
         self.kittyCard = self.deck.pop()
         self.trump_suit = None
         self.decisionMaker = None
+
+        self.played_cards_history = [] # Added for logger
+
         # First trick is led by the player left of the dealer
         self.leader =  1 if self.dealer == 4 else self.dealer + 1
 
@@ -146,7 +150,7 @@ class Hand:
                 if choice == "choose":
                     while True:
                         trump_suit = input(f"{name}, please choose a trump suit (H/D/C/S): ").upper()
-                        if trump_suit in ["H", "D", "C", "S"] and trump_suit != self.kittyCard:
+                        if trump_suit in ["H", "D", "C", "S"] and trump_suit != self.kittyCard[0]:
                             print(f"{name} chooses {trump_suit} as the trump suit.\n")
                             log_bidding_decision(player_num, hand, self.kittyCard, self.dealer, 2, self.kittyCard[0], trump_suit)
                             return player_num, trump_suit
@@ -180,6 +184,7 @@ class Hand:
             discard_card = (suit, rank)
             
             if discard_card in dealer_hand:
+                log_discard_decision(dealer_hand, self.kittyCard, discard_card)
                 dealer_hand.remove(discard_card)
                 print(f"Dealer discarded {discard_card}. Dealer's new hand: {dealer_hand}\n")
                 break
@@ -203,7 +208,10 @@ class Hand:
             hand = self.hands[player_num]
             chosen_card = self.choose_card(name, hand, led_suit, rules)
 
-            log_move(player_num, hand, self.trump_suit, cards_played, rules, chosen_card)
+
+            log_move(player_num, hand, self.trump_suit, cards_played, self.played_cards_history, rules, chosen_card)
+
+            self.played_cards_history.append(chosen_card) # Added for logger
 
             hand.remove(chosen_card)
             cards_played.append((player_num, chosen_card))
