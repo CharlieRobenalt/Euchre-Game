@@ -5,7 +5,7 @@ A complete Python implementation of the trick taking game **Euchre**, designed t
 ## Features 
 - **Full Game Rules:** Standard 4-player Euchre logic, including bidding, dealer discard, trump power rankings, and bower handling.
 - **Turn-By-Turn ML Logging:** Encodes game-state data directly into CSV rows for imitation learning.
-- **Behavioral Cloning:** Trains a Random Forest Classifier on logged human decisions to predict the opimal card to play given any game-state.
+- **Behavioral Cloning:** Trains a Random Forest Classifier on logged human decisions to predict the optimal card to play given any game-state.
 
 ## CSV Dataset Structure 
 Each logged turn produces a 40-column vector:
