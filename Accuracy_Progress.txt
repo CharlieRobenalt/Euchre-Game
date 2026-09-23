@@ -1,1 +1,2 @@
-9/22/2026, 1405 rows, 54.8% accuracy, 154 rows, NA
+9/22/2026, 1405 rows, 54.8% accuracy
+9/22/2026, 1425 rows, 47.0% accuracy ## Added trump vector columns
