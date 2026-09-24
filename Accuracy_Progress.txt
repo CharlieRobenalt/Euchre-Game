@@ -1,4 +1,5 @@
-DATE          my_moves_with_trump.csv     Accuracy
-9/22/2026,    1405 rows,                  54.8% accuracy
-9/22/2026,    1425 rows,                  47.0% accuracy ## Added trump vector columns
-9/23/2026     1765 rows,                  56.09% accuracy
+DATE        my_moves_with_trump     Accuracy
+9/22/2026,  1405 rows,              54.8% accuracy
+9/22/2026,  1425 rows,              47.0% accuracy ## Added trump vector columns
+9/23/2026   1765 rows,              56.09% accuracy
+9/23/2026   1785 rows,              57.14% accuracy
