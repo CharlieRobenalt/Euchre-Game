@@ -85,6 +85,16 @@ def get_ml_model_card(player_num, hand, legal_cards, cards_played, played_cards_
     if len(legal_cards) == 1:
         return legal_cards[0]
 
+    # --- PARTNER GUARD ---
+    # If your partner is currently holding the highest card on this trick,
+    # don't waste high cards or trump: slough your lowest legal card!
+    partner_num = player_num + 2 if player_num <= 2 else player_num - 2
+    if cards_played:
+        best_played = max(cards_played, key=lambda pc: rules.card_value(pc[1]))
+        if best_played[0] == partner_num:
+            return min(legal_cards, key=lambda c: rules.card_value(c))
+    # ---------------------
+
     # Build input features
     features_df = extract_state_features(
         player_num, hand, trump_suit, cards_played, played_cards_history, rules
@@ -206,7 +216,7 @@ def bot_playTrick(self):
                 player_num, hand, legal_cards, cards_played, self.played_cards_history, rules, self.trump_suit
             )
         else:
-            chosen_card = get_random_card(hand, legal_cards, cards_played, rules, self.trump_suit)
+            chosen_card = get_heuristic_card(hand, legal_cards, cards_played, rules, self.trump_suit)
 
         self.played_cards_history.append(chosen_card)
         hand.remove(chosen_card)
@@ -317,7 +327,7 @@ def run_benchmark(num_games=500):
     print("--- Benchmark Complete ---")
     print(f"Total Time: {elapsed:.2f}s ({num_games / elapsed:.1f} games/second)")
     print(f"Team 1 (ML Model) Wins:  {t1_wins} ({t1_wins / num_games * 100:.1f}%)")
-    print(f"Team 2 (Random) Wins: {t2_wins} ({t2_wins / num_games * 100:.1f}%)")
+    print(f"Team 2 (Heuristic) Wins: {t2_wins} ({t2_wins / num_games * 100:.1f}%)")
 
 
 if __name__ == "__main__":
