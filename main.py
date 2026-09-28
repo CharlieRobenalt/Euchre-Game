@@ -282,7 +282,7 @@ class Hand:
             if trickswon[1] == 3 or trickswon[1] == 4:  # Team 2 made their bid
                 return [0, 1]  # Team 2 gets 1 point
             elif trickswon[1] == 5:  # Team 2 won all 5 tricks
-                return [0, 2]  # Team 2 gets 3 points
+                return [0, 2]  # Team 2 gets 2 points
             else:  # Team 2 failed to make their bid
                 return [2, 0]  # Team 1 gets 2 points
 
@@ -322,8 +322,9 @@ class CardRules:
             return -1  # Non-trump cards of a non-led suit are ranked lowest and can't win the trick
 
 
-game1 = Game()
-game1.playGame()
+if __name__ == "__main__":
+    game1 = Game()
+    game1.playGame()
 
 """
 def main():
