@@ -139,11 +139,20 @@ def bot_chooseTrumpKitty(self):
 
     for player_num in turn_order:
         hand = self.hands[player_num]
-        rules = main.CardRules(kitty_suit)
-        trump_count = sum(1 for c in hand if rules.effective_suit(c) == kitty_suit)
-        if trump_count >= 3:
+        is_dealer = (player_num == self.dealer)
+        partner_num = player_num + 2 if player_num <= 2 else player_num - 2
+        partner_dealer = (partner_num == self.dealer)
+
+        # Add kitty card to dealers hand for evaluation
+        hand_to_evaluate = set(hand) | {self.kittyCard} if is_dealer else set(hand)
+
+        # Evaluate bidding strength and decide whether to order up the kitty
+        if evaluate_bidding_Strength(hand_to_evaluate, self.kittyCard, is_dealer, partner_dealer):
             return player_num, kitty_suit
-    return None, None
+
+    return None, None  # No one chooses to order up the kitty
+
+
 
 
 def bot_chooseTrumpNonKitty(self):
@@ -154,13 +163,16 @@ def bot_chooseTrumpNonKitty(self):
 
     for player_num in turn_order:
         hand = self.hands[player_num]
+        is_dealer = (player_num == self.dealer)
+        partner_num = player_num + 2 if player_num <= 2 else player_num - 2
+        partner_dealer = (partner_num == self.dealer)
+
         for suit in available_suits:
-            rules = main.CardRules(suit)
-            trump_count = sum(1 for c in hand if rules.effective_suit(c) == suit)
-            if trump_count >= 3:
+            if evaluate_bidding_Strength(hand, (suit, 0), is_dealer, partner_dealer):
                 return player_num, suit
 
-    # Stick the dealer
+
+    # Stick the dealer if no one else chooses
     dealer_hand = self.hands[self.dealer]
     best_suit = max(
         available_suits,
@@ -172,8 +184,7 @@ def bot_chooseTrumpNonKitty(self):
 def bot_discardCard(self):
     dealer_hand = self.hands[self.dealer]
     dealer_hand.add(self.kittyCard)
-    rules = main.CardRules(self.trump_suit)
-    card_to_discard = min(dealer_hand, key=lambda c: rules.card_value(c))
+    card_to_discard = choose_Smart_discard(dealer_hand, self.trump_suit)
     dealer_hand.remove(card_to_discard)
 
 
@@ -208,9 +219,65 @@ def bot_playTrick(self):
     winner_player = self.determine_trick_winner(cards_played, rules)
     return winner_player
 
+# ==============================================================================
+# BIDDING & DISCAARD LOGIC
+# ==============================================================================
+def evaluate_bidding_Strength(hand, kitty_card, isDealer = False, isPartnerDealer = False):
+    """Calculates expected trick points instead of just counting raw trumps."""
+    rules = main.CardRules(kitty_card[0])
+    trumps = [c for c in hand if rules.effective_suit(c) == kitty_card[0]]
+    off_cards = [c for c in hand if rules.effective_suit(c) != kitty_card[0]]
+
+    expected_tricks = 0.0
+
+    # Trump Values
+    for c in trumps:
+        value = rules.card_value(c)
+        if value == 100: expected_tricks += 1.0  # Right Bower
+        elif value == 99: expected_tricks += 0.9  # Left Bower
+        elif value == 64: expected_tricks += 0.75  # Ace of Trump
+        elif value >= 62: expected_tricks += 0.45  # King and Queen of Trump
+        else: expected_tricks += 0.25  # Other Trump Cards
+
+    off_Aces = [c for c in off_cards if c[1] == 14]
+    expected_tricks += 0.5 * len(off_Aces)  # Each off Ace
+
+    if isDealer:
+        expected_tricks += 0.35  # Dealer advantage 
+
+    if isPartnerDealer:
+        expected_tricks += 0.15  # Partner dealer advantage
+
+    # Threshold for calling it trump
+    threshold = 2.2 if (isDealer or isPartnerDealer) else 2.7
+    return expected_tricks >= threshold
+    
+
+def choose_Smart_discard(hand_with_kitty, trump_suit):
+    """Discards to create a void in an off-suit so dealer can trump early."""
+    rules = main.CardRules(trump_suit)
+    non_trumps = [c for c in hand_with_kitty if rules.effective_suit(c) != trump_suit]
+
+    # If holding 6 trump discard lowest trump
+    if not non_trumps:
+        return min(hand_with_kitty, key=lambda c: rules.card_value(c))
+
+    # Count the number of cards in each non-trump suit
+    suit_counts = {}
+    for c in non_trumps:
+        suit_counts[c[0]] = suit_counts.get(c[0], 0) + 1
+
+    # Find suits with the one card
+    short_suits = [c for c in non_trumps if suit_counts.get(c[0], 0) == 1]
+    if short_suits:
+        return min(short_suits, key=lambda c: rules.card_value(c))
+
+    # Otherwise, discard the lowest non-trump card
+    return min(non_trumps, key=lambda c: rules.card_value(c))
+
 
 # ==============================================================================
-# 5. SIMULATION CONTROLLER
+# SIMULATION CONTROLLER
 # ==============================================================================
 class SuppressOutput:
     """Redirects stdout to /dev/null so prints do not slow down the simulation."""
