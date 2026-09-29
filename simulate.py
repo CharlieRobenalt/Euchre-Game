@@ -85,6 +85,7 @@ def get_ml_model_card(player_num, hand, legal_cards, cards_played, played_cards_
     if len(legal_cards) == 1:
         return legal_cards[0]
 
+
     # --- PARTNER GUARD ---
     # If your partner is currently holding the highest card on this trick,
     # don't waste high cards or trump: slough your lowest legal card!
@@ -209,9 +210,9 @@ def bot_playTrick(self):
         hand = self.hands[player_num]
         legal_cards = self.get_legal_cards(hand, led_suit, rules)
 
-        # Team 1 (Players 1 & 3): ML Model
-        # Team 2 (Players 2 & 4): Heuristic Bot
-        if player_num in [1, 3]:
+        # Team 1 (Players 1 & 3): ML Model and Heuristic Bot
+        # Team 2 (Players 2 & 4): Heuristic Bots
+        if player_num == 1:
             chosen_card = get_ml_model_card(
                 player_num, hand, legal_cards, cards_played, self.played_cards_history, rules, self.trump_suit
             )
@@ -234,32 +235,54 @@ def bot_playTrick(self):
 # ==============================================================================
 def evaluate_bidding_Strength(hand, kitty_card, isDealer = False, isPartnerDealer = False):
     """Calculates expected trick points instead of just counting raw trumps."""
-    rules = main.CardRules(kitty_card[0])
-    trumps = [c for c in hand if rules.effective_suit(c) == kitty_card[0]]
-    off_cards = [c for c in hand if rules.effective_suit(c) != kitty_card[0]]
+    trump_suit = kitty_card[0]
+    rules = main.CardRules(trump_suit)
+    
+    trumps = [c for c in hand if rules.effective_suit(c) == trump_suit]
+    off_cards = [c for c in hand if rules.effective_suit(c) != trump_suit]
 
     expected_tricks = 0.0
 
-    # Trump Values
+    # 1. Trump Rank Evaluation
     for c in trumps:
-        value = rules.card_value(c)
-        if value == 100: expected_tricks += 1.0  # Right Bower
-        elif value == 99: expected_tricks += 0.9  # Left Bower
-        elif value == 64: expected_tricks += 0.75  # Ace of Trump
-        elif value >= 62: expected_tricks += 0.45  # King and Queen of Trump
-        else: expected_tricks += 0.25  # Other Trump Cards
+        val = rules.card_value(c)
+        if val == 100:    expected_tricks += 1.10  # Right Bower
+        elif val == 99:   expected_tricks += 0.95  # Left Bower
+        elif val == 64:   expected_tricks += 0.75  # Ace of Trump
+        elif val >= 62:   expected_tricks += 0.45  # King / Queen of Trump
+        else:             expected_tricks += 0.20  # 9 / 10 of Trump
 
-    off_Aces = [c for c in off_cards if c[1] == 14]
-    expected_tricks += 0.5 * len(off_Aces)  # Each off Ace
+    # 2. Off-suit Aces (Strongest side trick-winners)
+    off_aces = [c for c in off_cards if c[1] == 14]
+    expected_tricks += len(off_aces) * 0.60
 
+    # 3. Hand Shape (Suit distribution & void creation potential)
+    # Being Short-Suited allows early trumping
+    off_suit_counts = {}
+    for c in off_cards:
+        s = rules.effective_suit(c)
+        off_suit_counts[s] = off_suit_counts.get(s, 0) + 1
+
+    # Check for non-trump singletons (1 card) or two-suited hands
+    singletons = sum(1 for cnt in off_suit_counts.values() if cnt == 1)
+    if singletons >= 1:
+        expected_tricks += 0.20
+
+    # 4. Positional Adjustments
     if isDealer:
-        expected_tricks += 0.35  # Dealer advantage 
+        expected_tricks += 0.30  # Dealer gets to discard to void a suit
 
+    # --- TUNED RISK-ADJUSTED THRESHOLDS ---
+    # Partner is dealer: be aggressive (partner gains kitty card + discard void)
     if isPartnerDealer:
-        expected_tricks += 0.15  # Partner dealer advantage
+        threshold = 2.30
+    # Player is dealer: moderate threshold
+    elif isDealer:
+        threshold = 2.85
+    # Standard seat (calling from the wild): high threshold to avoid euchres
+    else:
+        threshold = 3.15
 
-    # Threshold for calling it trump
-    threshold = 2.2 if (isDealer or isPartnerDealer) else 2.7
     return expected_tricks >= threshold
     
 
@@ -308,7 +331,7 @@ def run_benchmark(num_games=500):
     main.Hand.playTrick = bot_playTrick
 
     print(f"Starting headless simulation of {num_games} games...")
-    print("Matchup: Team 1 (ML Model) vs Team 2 (Baseline Random)\n")
+    print("Matchup: Team 1 (ML Model & Heuristic Bot) vs Team 2 (Heuristic Bots)\n")
 
     start_time = time.time()
     t1_wins = 0
@@ -326,8 +349,8 @@ def run_benchmark(num_games=500):
     elapsed = time.time() - start_time
     print("--- Benchmark Complete ---")
     print(f"Total Time: {elapsed:.2f}s ({num_games / elapsed:.1f} games/second)")
-    print(f"Team 1 (ML Model) Wins:  {t1_wins} ({t1_wins / num_games * 100:.1f}%)")
-    print(f"Team 2 (Heuristic) Wins: {t2_wins} ({t2_wins / num_games * 100:.1f}%)")
+    print(f"Team 1 (ML Model & Heuristic Bot) Wins:  {t1_wins} ({t1_wins / num_games * 100:.1f}%)")
+    print(f"Team 2 (Heuristic Bots) Wins: {t2_wins} ({t2_wins / num_games * 100:.1f}%)")
 
 
 if __name__ == "__main__":
