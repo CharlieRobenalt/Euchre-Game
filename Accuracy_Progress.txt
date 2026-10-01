@@ -1,8 +1,9 @@
 DATE        my_moves_with_trump     Accuracy
-9/22/2026,  1405 rows,              54.8% accuracy
-9/22/2026,  1425 rows,              47.0% accuracy ## Added trump vector columns
-9/23/2026   1765 rows,              56.09% accuracy
-9/23/2026   1785 rows,              57.14% accuracy
-9/24/2026   1807 rows,              56.35% accuracy
-9/25/2026   1847 rows,              57.76% accuracy
-9/27/2026   2287 rows,              60.04% accuracy 
+9/22/2026,   1405 rows,              54.8% accuracy
+9/22/2026,   1425 rows,              47.0% accuracy ## Added trump vector columns
+9/23/2026,   1765 rows,              56.09% accuracy
+9/23/2026,   1785 rows,              57.14% accuracy
+9/24/2026,   1807 rows,              56.35% accuracy
+9/25/2026,   1847 rows,              57.76% accuracy
+9/27/2026,   2287 rows,              60.04% accuracy 
+10/1/2026,   2707 rows,              63.47% accuracy
