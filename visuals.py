@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox, simpledialog
+from tkinter import messagebox
 import pickle
 import pandas as pd
 import random
@@ -35,7 +35,7 @@ def card_color(card):
 
 
 # ==============================================================================
-# 2. BOT DECISION & FEATURE LOGIC (From your test file)
+# 2. BOT DECISION & FEATURE LOGIC
 # ==============================================================================
 def extract_state_features(player_num, hand, trump_suit, cards_played_this_trick, played_cards_history, rules):
     all_played = list(played_cards_history) + [card for _, card in cards_played_this_trick]
@@ -182,11 +182,12 @@ class EuchreGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Euchre - ML Partner & Heuristic Opponents")
-        self.root.geometry("900x700")
+        self.root.geometry("900x740")
         self.root.configure(bg="#1E6B37")
 
         self.dealer = 1
         self.score = [0, 0]
+        self.is_discarding = False
         self.reset_hand_state()
 
         self.setup_ui()
@@ -209,6 +210,7 @@ class EuchreGUI:
         self.leader = 1 if self.dealer == 4 else self.dealer + 1
         self.turn_order = []
         self.current_player = None
+        self.is_discarding = False
 
     def setup_ui(self):
         # Top Scoreboard
@@ -258,14 +260,23 @@ class EuchreGUI:
         )
         self.p4_label.pack(side="right")
 
+        # In-GUI Action / Bidding Panel (Directly above player cards)
+        self.action_panel = tk.Frame(self.table, bg="#1E6B37", height=45)
+        self.action_panel.pack(side="bottom", pady=4)
+
+        # Status Announcer
         self.status_label = tk.Label(
             self.table, text="", font=("Arial", 12, "italic"), fg="#E0FFE0", bg="#1E6B37"
         )
-        self.status_label.pack(side="bottom", pady=5)
+        self.status_label.pack(side="bottom", pady=4)
 
         # Player Hand Frame (South - You)
         self.hand_frame = tk.Frame(self.root, bg="#1E6B37")
-        self.hand_frame.pack(side="bottom", pady=20)
+        self.hand_frame.pack(side="bottom", pady=15)
+
+    def clear_action_panel(self):
+        for widget in self.action_panel.winfo_children():
+            widget.destroy()
 
     def refresh_screen(self):
         dealer_str = "You (P1)" if self.dealer == 1 else f"P{self.dealer}"
@@ -295,7 +306,9 @@ class EuchreGUI:
         is_my_turn = (self.current_player == 1)
 
         legal_cards = []
-        if is_my_turn and self.rules:
+        if self.is_discarding:
+            legal_cards = my_cards
+        elif is_my_turn and self.rules:
             led_suit = self.rules.led_suit
             if led_suit is None:
                 legal_cards = my_cards
@@ -304,7 +317,10 @@ class EuchreGUI:
                 legal_cards = matching if matching else my_cards
 
         for card in my_cards:
-            can_click = is_my_turn and (card in legal_cards)
+            can_click = (self.is_discarding) or (is_my_turn and (card in legal_cards))
+            
+            cmd = (lambda drop=card: self.resolve_discard(drop)) if self.is_discarding else (lambda c=card: self.human_play_card(c))
+
             btn = tk.Button(
                 self.hand_frame,
                 text=format_card(card),
@@ -313,13 +329,14 @@ class EuchreGUI:
                 bg="#FFFFFF" if can_click else "#D0D0D0",
                 width=5, height=3, relief="raised", bd=3,
                 state="normal" if can_click else "disabled",
-                command=lambda c=card: self.human_play_card(c)
+                command=cmd
             )
             btn.pack(side="left", padx=6)
 
-    # --- Bidding Engine ---
+    # --- In-GUI Bidding Flow ---
     def start_new_hand(self):
         self.reset_hand_state()
+        self.clear_action_panel()
         self.center_box.config(text=f"Kitty Card:\n\n{format_card(self.kitty)}")
         self.status_label.config(text="Bidding Round 1: Deciding on kitty...")
         self.refresh_screen()
@@ -333,6 +350,7 @@ class EuchreGUI:
         self.root.after(800, self.step_kitty_bidding)
 
     def step_kitty_bidding(self):
+        self.clear_action_panel()
         if not self.bidding_order:
             self.status_label.config(text="All passed kitty. Round 2: Calling any suit...")
             self.center_box.config(text=f"Kitty Turned Down:\n\n{format_card(self.kitty)}")
@@ -345,17 +363,24 @@ class EuchreGUI:
         partner_dealer = (partner_num == self.dealer)
 
         if p == 1:
-            choice = messagebox.askyesno(
-                "Pick Up Kitty?",
-                f"Kitty card is {format_card(self.kitty)}.\nOrder dealer (P{self.dealer}) to pick it up?"
+            # Human choice directly on the board
+            order_label = "Pick It Up" if is_dealer else f"Order Up P{self.dealer}"
+            self.status_label.config(text=f"Your turn: Order up {format_card(self.kitty)} or Pass?")
+            
+            btn_pick = tk.Button(
+                self.action_panel, text=f"✔ {order_label}", font=("Arial", 12, "bold"),
+                bg="#4CAF50", fg="black", padx=12, pady=3,
+                command=lambda: self.on_human_kitty_choice(True)
             )
-            if choice:
-                self.set_trump(maker=1, suit=self.kitty[0], is_kitty=True)
-            else:
-                self.status_label.config(text="You passed on the kitty.")
-                self.root.after(600, self.step_kitty_bidding)
+            btn_pick.pack(side="left", padx=10)
+
+            btn_pass = tk.Button(
+                self.action_panel, text="✖ Pass", font=("Arial", 12, "bold"),
+                bg="#E57373", fg="black", padx=12, pady=3,
+                command=lambda: self.on_human_kitty_choice(False)
+            )
+            btn_pass.pack(side="left", padx=10)
         else:
-            # Bot uses evaluate_bidding_Strength
             hand_eval = set(self.hands[p]) | {self.kitty} if is_dealer else set(self.hands[p])
             if evaluate_bidding_Strength(hand_eval, self.kitty, is_dealer, partner_dealer):
                 p_desc = "Partner (ML)" if p == 3 else f"Player {p}"
@@ -365,6 +390,14 @@ class EuchreGUI:
                 p_desc = "Partner (ML)" if p == 3 else f"Player {p}"
                 self.status_label.config(text=f"{p_desc} passed.")
                 self.root.after(600, self.step_kitty_bidding)
+
+    def on_human_kitty_choice(self, chose_pick):
+        self.clear_action_panel()
+        if chose_pick:
+            self.set_trump(maker=1, suit=self.kitty[0], is_kitty=True)
+        else:
+            self.status_label.config(text="You passed on the kitty.")
+            self.root.after(600, self.step_kitty_bidding)
 
     def start_non_kitty_bidding(self):
         self.bidding_order = []
@@ -376,6 +409,7 @@ class EuchreGUI:
         self.step_non_kitty_bidding()
 
     def step_non_kitty_bidding(self):
+        self.clear_action_panel()
         p = self.bidding_order.pop(0)
         valid_suits = [s for s in ["H", "D", "C", "S"] if s != self.kitty[0]]
         is_dealer = (p == self.dealer)
@@ -384,22 +418,35 @@ class EuchreGUI:
 
         if p == 1:
             must_call = is_dealer  # Stick the dealer
-            choice = True if must_call else messagebox.askyesno("Call Trump", "Do you want to name a trump suit?")
-            if choice:
-                suit = simpledialog.askstring("Suit Selection", f"Choose trump ({', '.join(valid_suits)}):")
-                if suit and suit.upper() in valid_suits:
-                    self.set_trump(maker=1, suit=suit.upper(), is_kitty=False)
-                    return
-            self.root.after(600, self.step_non_kitty_bidding)
+            self.status_label.config(
+                text="You are stuck dealer - MUST call trump!" if must_call else "Your turn: Call a trump suit or Pass."
+            )
+
+            # Suit Selection Buttons on the GUI
+            suit_names = {"H": "Hearts", "D": "Diamonds", "C": "Clubs", "S": "Spades"}
+            for s in valid_suits:
+                btn_color = "#CC0000" if s in ["H", "D"] else "#000000"
+                btn_suit = tk.Button(
+                    self.action_panel, text=f"{SUIT_SYMBOLS[s]} {suit_names[s]}",
+                    font=("Arial", 11, "bold"), fg=btn_color, bg="white", padx=8, pady=3,
+                    command=lambda chosen=s: self.on_human_call_suit(chosen)
+                )
+                btn_suit.pack(side="left", padx=5)
+
+            if not must_call:
+                btn_pass = tk.Button(
+                    self.action_panel, text="✖ Pass", font=("Arial", 11, "bold"),
+                    bg="#E57373", fg="black", padx=10, pady=3,
+                    command=self.on_human_pass_non_kitty
+                )
+                btn_pass.pack(side="left", padx=8)
         else:
-            # Bot evaluates all valid non-kitty suits
             called_suit = None
             for s in valid_suits:
                 if evaluate_bidding_Strength(self.hands[p], (s, 0), is_dealer, partner_dealer):
                     called_suit = s
                     break
 
-            # Stick the dealer if no one called
             if called_suit is None and is_dealer:
                 called_suit = max(
                     valid_suits,
@@ -415,7 +462,17 @@ class EuchreGUI:
                 self.status_label.config(text=f"{p_desc} passed.")
                 self.root.after(600, self.step_non_kitty_bidding)
 
+    def on_human_call_suit(self, suit):
+        self.clear_action_panel()
+        self.set_trump(maker=1, suit=suit, is_kitty=False)
+
+    def on_human_pass_non_kitty(self):
+        self.clear_action_panel()
+        self.status_label.config(text="You passed.")
+        self.root.after(600, self.step_non_kitty_bidding)
+
     def set_trump(self, maker, suit, is_kitty):
+        self.clear_action_panel()
         self.decision_maker = maker
         self.trump_suit = suit
         self.rules = CardRules(self.trump_suit)
@@ -426,30 +483,28 @@ class EuchreGUI:
                 self.prompt_human_discard()
                 return
             else:
-                # Bots use choose_Smart_discard
                 discard = choose_Smart_discard(self.hands[self.dealer], self.trump_suit)
                 self.hands[self.dealer].remove(discard)
 
         self.root.after(1000, self.start_trick_phase)
 
     def prompt_human_discard(self):
+        self.is_discarding = True
+        self.status_label.config(
+            text=f"You picked up {format_card(self.kitty)}. Click any card from your hand below to discard it."
+        )
         self.refresh_screen()
-        messagebox.showinfo("Discard Card", f"You picked up {format_card(self.kitty)}.\nClick any card from your hand to discard it.")
-        for btn in self.hand_frame.winfo_children():
-            btn.config(state="normal")
-            card_text = btn.cget("text")
-            for c in list(self.hands[1]):
-                if format_card(c) == card_text:
-                    btn.config(command=lambda drop=c: self.resolve_discard(drop))
 
     def resolve_discard(self, card):
+        self.is_discarding = False
         self.hands[1].remove(card)
         self.status_label.config(text=f"Discarded {format_card(card)}.")
         self.refresh_screen()
         self.root.after(800, self.start_trick_phase)
 
-    # --- Trick Play Engine ---
+    # --- Trick Play Flow ---
     def start_trick_phase(self):
+        self.clear_action_panel()
         self.current_trick = []
         self.rules.led_suit = None
 
@@ -492,14 +547,12 @@ class EuchreGUI:
         p = self.current_player
         hand = self.hands[p]
 
-        # Determine legal cards
         if self.rules.led_suit is None:
             legal_cards = list(hand)
         else:
             matching = [c for c in hand if self.rules.effective_suit(c) == self.rules.led_suit]
             legal_cards = matching if matching else list(hand)
 
-        # ROUTING: Player 3 uses your Trained ML Model; Players 2 & 4 use your Heuristics
         if p == 3:
             chosen_card = get_ml_model_card(
                 player_num=3,
