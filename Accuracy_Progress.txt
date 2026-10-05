@@ -7,4 +7,5 @@ DATE        my_moves_with_trump     Accuracy
 9/25/2026,   1847 rows,              57.76% accuracy
 9/27/2026,   2287 rows,              60.04% accuracy 
 10/1/2026,   2707 rows,              63.47% accuracy
-10/3/2025,   2747 rows,              59.14% accuracy
+10/3/2026,   2747 rows,              59.14% accuracy
+10/5/2026,   2807 rows,             60.32% accuracy
